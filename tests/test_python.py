@@ -365,6 +365,28 @@ def test_cfg_init():
     (Path.cwd() / DEFAULT_CFG_PATH.name.replace('.yaml', '_copy.yaml')).unlink(missing_ok=False)
     [smart_value(x) for x in ['none', 'true', 'false']]
 
+@pytest.fixture(scope="function")
+def default_cfg():
+    yield copy_default_cfg()
+    # Clean up tmp config file after test
+    (Path.cwd() / DEFAULT_CFG_PATH.name.replace('.yaml', '_copy.yaml')).unlink(missing_ok=True)
+
+@pytest.mark.parametrize("dict1, dict2", [
+    ({'a': 1}, {'b': 2}),
+    ({'a': 1}, {'c': 2}) # mismatched keys
+])
+def test_check_dict_alignment(dict1, dict2):
+    with pytest.raises(AssertionError):
+        check_dict_alignment(dict1, dict2)
+        
+def test_default_cfg(default_cfg):
+    assert isinstance(default_cfg, dict)
+    assert default_cfg != DEFAULT_CFG
+    
+@pytest.mark.parametrize("value", ['none', 'true', 'false', 0, 1, '1', '0'])    
+def test_smart_value(value):
+    assert smart_value(value) in [None, True, False, 0, 1]
+
 
 def test_utils_init():
     """Test initialization utilities."""
